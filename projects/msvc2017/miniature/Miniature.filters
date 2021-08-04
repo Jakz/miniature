@@ -1,0 +1,96 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{a5d67fdb-b4b9-44f0-99c7-1ce219d6ed1c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\io">
+      <UniqueIdentifier>{d7f9137b-6b83-42ca-8321-a04a0d75fc0f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\io\zip">
+      <UniqueIdentifier>{466f99d7-c252-4e8f-b143-5a6a34dd623d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\game">
+      <UniqueIdentifier>{fbd43b84-3431-4555-8dd9-f53c4b0e9f62}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\gfx">
+      <UniqueIdentifier>{1858cc6f-a60f-49f1-9948-eeaf6c285a06}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\io\Loader.h">
+      <Filter>src\io</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Common.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\io\zip\unzip.h">
+      <Filter>src\io\zip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\io\zip\ioapi.h">
+      <Filter>src\io\zip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\io\Zip.h">
+      <Filter>src\io</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\game\Types.h">
+      <Filter>src\game</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\gfx\MainView.h">
+      <Filter>src\gfx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\gfx\SdlHelper.h">
+      <Filter>src\gfx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\gfx\ViewManager.h">
+      <Filter>src\gfx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\game\Level.h">
+      <Filter>src\game</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\game\Rules.h">
+      <Filter>src\game</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\game\Tile.h">
+      <Filter>src\game</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\main.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\io\Loader.cpp">
+      <Filter>src\io</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\io\zip\unzip.cpp">
+      <Filter>src\io\zip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\io\zip\ioapi.cpp">
+      <Filter>src\io\zip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\io\Zips.cpp">
+      <Filter>src\io</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\gfx\GameView.cpp">
+      <Filter>src\gfx</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\gfx\ViewManager.cpp">
+      <Filter>src\gfx</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\game\Level.cpp">
+      <Filter>src\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\game\Tile.cpp">
+      <Filter>src\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\game\Rules.cpp">
+      <Filter>src\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\gfx\LevelSelectView.cpp">
+      <Filter>src\gfx</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="Natvis.natvis" />
+  </ItemGroup>
+</Project>
