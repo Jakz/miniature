@@ -21,6 +21,9 @@
     <ClInclude Include="..\..\..\src\gfx\MainView.h">
       <Filter>src\gfx</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\src\gfx\Machine.h">
+      <Filter>src\gfx</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\main.cpp">

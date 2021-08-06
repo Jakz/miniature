@@ -8,57 +8,24 @@ using namespace ui;
 u32* buffer = nullptr;
 u64 offset = 0;
 
-static constexpr s32 SW = 128;
-static constexpr s32 SH = 128;
-
 Surface screen;
 
-static_assert((SW* SH) % 2 == 0);
 
-static constexpr u32 KB64 = 2 ^ 16;
-static constexpr u32 KB128 = 2 ^ 17;
-static constexpr u32 KB256 = 2 ^ 18;
-
-static constexpr u32 RED_SHIFT = 10, GREEN_SHIFT = 5, BLUE_SHIFT = 0;
-static constexpr u32 COLOR_MASK = 0b11111, COLOR_SHIFT = 3;
-
-constexpr u16 ccc(u8 r, u8 g, u8 b)
+void MainView::blitFramebuffer()
 {
-  return
-    ((r >> (COLOR_SHIFT)) << RED_SHIFT) |
-    ((g >> (COLOR_SHIFT)) << GREEN_SHIFT) |
-    ((b >> (COLOR_SHIFT)) << BLUE_SHIFT);
+  for (int i = 0; i < display.width() * display.height(); ++i)
+  {
+    col_t nc = display.pixel(i);
+    color_t c = display.ccc(nc);
+    screen.pixel(i) = SDL_MapRGBA(gvm->displayFormat(), c.r, c.g, c.b, 255);
+  }
 }
 
-color_t ccc(u16 c)
-{
-  u8 r = ((c >> RED_SHIFT) & COLOR_MASK) << COLOR_SHIFT;
-  u8 g = ((c >> GREEN_SHIFT) & COLOR_MASK) << COLOR_SHIFT;
-  u8 b = ((c >> BLUE_SHIFT) & COLOR_MASK) << COLOR_SHIFT;
-  return { r, g, b };
-}
-
-
-u8 memory[KB128];
-
-u16* vram = (u16*)memory;
-
-void MainView::convertFrom15bbpTo32bbp(u16 source, u32* dest)
-{
-  
-  u16 color = source;
-
-  // X RRRRR GGGGG BBBBB
-  color_t c = ccc(color);
-
-  *dest = SDL_MapRGBA(gvm->displayFormat(), c.r, c.g, c.b, 255);
-}
-
-MainView::MainView(ViewManager* gvm) : gvm(gvm)
+MainView::MainView(ViewManager* gvm) : gvm(gvm), memory(), display(&memory)
 {
   mouse = { -1, -1 };
 
-  std::fill(memory, memory + KB128, 0);
+  memory.clear();
 }
 
 void MainView::render()
@@ -69,18 +36,20 @@ void MainView::render()
 
   if (!screen)
   {
-    screen = gvm->allocate(SW, SH);
+    screen = gvm->allocate(display.width(), display.height());
   }
 
-  //gvm->clear(screen, 255, 255, 255);
-  
-  convertFrom15bbpTo32bbp(ccc(255, 0, 0), &screen.pixel(160));
-  convertFrom15bbpTo32bbp(ccc(0, 255, 0), &screen.pixel(161));
-  convertFrom15bbpTo32bbp(ccc(0, 0, 255), &screen.pixel(162));
+  memory.clear();
 
+  //display.fill(display.ccc(255, 0, 0));
+  for (int i = 0; i < 128; ++i)
+    for (int j = 0; j < 20; ++j)
+      display.set(i, j, display.ccc(rand()%256, rand()%256, rand()%256));
+  
+  blitFramebuffer();
   screen.update();
 
-  gvm->blit(screen, 0, 0, SW, SH, 10, 10, SW*2, SH*2);
+  gvm->blit(screen, 0, 0, display.width(), display.height(), 10, 10, display.width()*3, display.height()*3);
 }
 
 void MainView::handleKeyboardEvent(const SDL_Event& event)

@@ -2,6 +2,7 @@
 
 #include "ViewManager.h"
 #include "Common.h"
+#include "Machine.h"
 
 struct ObjectGfx;
 
@@ -12,8 +13,11 @@ namespace ui
   private:
     ViewManager* gvm;
     point_t mouse;
+
+    Memory memory;
+    Display display;
     
-    void convertFrom15bbpTo32bbp(u16 source, u32* dest);
+    void blitFramebuffer();
 
   public:
     MainView(ViewManager* gvm);
