@@ -21,8 +21,8 @@
     <ClInclude Include="..\..\..\src\gfx\MainView.h">
       <Filter>src\gfx</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\gfx\Machine.h">
-      <Filter>src\gfx</Filter>
+    <ClInclude Include="..\..\..\src\Machine.h">
+      <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -31,6 +31,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\src\gfx\ViewManager.cpp">
       <Filter>src\gfx</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Machine.cpp">
+      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\gfx\MainView.cpp">
       <Filter>src\gfx</Filter>

@@ -78,9 +78,6 @@ public:
 
   col_t pixel(addr_t i) const { return framebuffer()[i]; }
 
-  void fill(col_t color);
-  void set(u32 x, u32 y, col_t color);
-
   constexpr u16 ccc(u8 r, u8 g, u8 b)
   {
     return
@@ -96,15 +93,8 @@ public:
     u8 b = ((c >> BLUE_SHIFT) & COLOR_MASK) << COLOR_SHIFT;
     return { r, g, b };
   }
+
+  void fill(col_t color);
+  void set(u32 x, u32 y, col_t color);
+  void rect(u32 x, u32 y, u32 w, u32 h, col_t color);
 };
-
-inline void Display::set(u32 x, u32 y, col_t color)
-{
-  col_t* ptr = framebuffer();
-  ptr[x + y * width()] = color;
-}
-
-inline void Display::fill(col_t color)
-{
-  std::fill(framebuffer(), framebuffer() + width() * height(), color);
-}

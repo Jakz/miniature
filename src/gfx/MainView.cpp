@@ -41,10 +41,10 @@ void MainView::render()
 
   memory.clear();
 
+  display.rect(10, 10, 16, 16, rand() % 0xFFFF);
+
   //display.fill(display.ccc(255, 0, 0));
-  for (int i = 0; i < 128; ++i)
-    for (int j = 0; j < 20; ++j)
-      display.set(i, j, display.ccc(rand()%256, rand()%256, rand()%256));
+
   
   blitFramebuffer();
   screen.update();
