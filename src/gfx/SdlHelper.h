@@ -220,7 +220,7 @@ bool SDL<EventHandler, Renderer>::init()
 #else
   _window = SDL_CreateWindow("retro-8", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, SDL_WINDOW_OPENGL);
 #endif
-  _renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
+  _renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
   SDL_RendererInfo info;
   SDL_GetRendererInfo(_renderer, &info);

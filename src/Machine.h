@@ -12,11 +12,14 @@ static constexpr s32 KB256 = 1 << 18;
 using addr_t = u32;
 using col_t = u16;
 using col_idx_t = u32;
+using col_idx_pair_t = u32;
 
-enum SpriteFlag : u32
+enum class SpriteFlag : u32
 {
   Enabled = 0x00000001,
 };
+
+enum class SpriteSize { _8, _16, _24, _32, _48, _64 };
 
 struct SpriteInfo
 {
@@ -39,6 +42,7 @@ struct Specs
 
   static constexpr s32 SPRITE_WIDTH = 8;
   static constexpr s32 SPRITE_HEIGHT = 8;
+  static constexpr s32 SPRITE_MAP_WIDTH = 16;
   static constexpr s32 SPRITE_MAP_SIZE = 256;
   static constexpr s32 SPRITE_MAPS_COUNT = 2;
 
@@ -75,8 +79,31 @@ struct Address
 
 struct Color
 {
-  static constexpr col_t BLACK = 0x0000;
+  static constexpr col_t BLACK = 0x8000;
   static constexpr col_t WHITE = 0xFFFF;
+
+  static constexpr col_t TRANSPARENT = 0x0000;
+  static constexpr col_t OPAQUE_FLAG = 0x8000;
+
+  static constexpr bool isOpaque(col_t c) { return c & OPAQUE_FLAG; }
+  static constexpr bool isTransparent(col_t c) { return !isOpaque(c); }
+
+  static constexpr col_t ccc(u8 r, u8 g, u8 b)
+  {
+    //TODO: not using full brightness colors
+    return OPAQUE_FLAG |
+      ((r >> (Specs::COLOR_SHIFT)) << Specs::RED_SHIFT) |
+      ((g >> (Specs::COLOR_SHIFT)) << Specs::GREEN_SHIFT) |
+      ((b >> (Specs::COLOR_SHIFT)) << Specs::BLUE_SHIFT);
+  }
+
+  static color_t ccc(u16 c)
+  {
+    u8 r = ((c >> Specs::RED_SHIFT) & Specs::COLOR_MASK) << Specs::COLOR_SHIFT;
+    u8 g = ((c >> Specs::GREEN_SHIFT) & Specs::COLOR_MASK) << Specs::COLOR_SHIFT;
+    u8 b = ((c >> Specs::BLUE_SHIFT) & Specs::COLOR_MASK) << Specs::COLOR_SHIFT;
+    return { r, g, b };
+  }
 };
 
 
@@ -88,25 +115,50 @@ private:
 
 public:
 
+  void set(coord_t i, col_idx_t color)
+  {
+    auto b = i / 2, o = i % 2;
+
+    if (o) data[b] = (data[b] & 0xF0) | (color);
+    else data[b] = (data[b] & 0x0F) | (color << 4);
+  }
+
   void set(coord_t x, coord_t y, col_idx_t color)
   {
-    u8* base = data.data() + (y * Specs::SPRITE_ROW_SIZE_IN_BYTES + (x / 2));
+    set(x + y * Specs::SPRITE_WIDTH, color);
+  }
 
-    if (x % 2 == 0)
-      *base = (*base & 0x0F) | (color << 4);
-    else
-      *base = (*base & 0xF0) | (color);
+  void setRow(coord_t y, const std::array<col_idx_t, Specs::SPRITE_WIDTH>& data)
+  {
+    for (coord_t x = 0; x < Specs::SPRITE_WIDTH; ++x)
+      set(x, y, data[x]);
+  }
+
+  void setRowString(coord_t y, const std::string& data)
+  {
+    assert(data.size() == Specs::SPRITE_WIDTH);
+    for (coord_t x = 0; x < Specs::SPRITE_WIDTH; ++x)
+      set(x, y, (data[x] >= '0' || data[x] <= '9') ? (data[x] - '0') : (data[x] - 'A'));
+  }
+  
+  void setString(const std::string& data)
+  {
+    assert(data.size() == Specs::SPRITE_HEIGHT * Specs::SPRITE_WIDTH);
+    for (coord_t i = 0; i < Specs::SPRITE_HEIGHT * Specs::SPRITE_WIDTH; ++i)
+      set(i, (data[i] >= '0' || data[i] <= '9') ? (data[i] - '0') : (data[i] - 'A'));
   }
 
   col_idx_t get(coord_t x, coord_t y)
   {
-    u8* base = data.data() + (y * Specs::SPRITE_ROW_SIZE_IN_BYTES + (x / 2));
+    u8* base = row(y) + (x / 2);
 
     if (x % 2 == 0)
       return (*base >> 4) & 0x0F;
     else
       return *base & 0x0F;
   }
+
+  u8* row(coord_t y) { return data.data() + y * Specs::SPRITE_ROW_SIZE_IN_BYTES; }
 };
 
 using Palette = std::array<col_t, Specs::PALETTE_SIZE>;
@@ -173,23 +225,6 @@ public:
   auto height() const { return Specs::SCREEN_HEIGHT; }
 
   col_t pixel(addr_t i) const { return framebuffer()[i]; }
-
-  constexpr u16 ccc(u8 r, u8 g, u8 b) const 
-  {
-    //TODO: not using full brightness colors
-    return
-      ((r >> (Specs::COLOR_SHIFT)) << Specs::RED_SHIFT) |
-      ((g >> (Specs::COLOR_SHIFT)) << Specs::GREEN_SHIFT) |
-      ((b >> (Specs::COLOR_SHIFT)) << Specs::BLUE_SHIFT);
-  }
-
-  color_t ccc(u16 c) const
-  {
-    u8 r = ((c >> Specs::RED_SHIFT) & Specs::COLOR_MASK) << Specs::COLOR_SHIFT;
-    u8 g = ((c >> Specs::GREEN_SHIFT) & Specs::COLOR_MASK) << Specs::COLOR_SHIFT;
-    u8 b = ((c >> Specs::BLUE_SHIFT) & Specs::COLOR_MASK) << Specs::COLOR_SHIFT;
-    return { r, g, b };
-  }
 
   void clear();
   void fill(col_t color);

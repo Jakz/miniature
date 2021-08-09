@@ -18,7 +18,7 @@ void MainView::blitFramebuffer()
   for (int i = 0; i < machine.screen().width() * machine.screen().height(); ++i)
   {
     col_t nc = screen.pixel(i);
-    color_t c = screen.ccc(nc);
+    color_t c = Color::ccc(nc);
     surface.pixel(i) = SDL_MapRGBA(gvm->displayFormat(), c.r, c.g, c.b, 255);
   }
 }
@@ -60,15 +60,48 @@ void MainView::render()
     surface = gvm->allocate(screen.width(), screen.height());
 
     machine.spriteInfos()[0].flags |= SpriteFlag::Enabled;
-    machine.palettes()[0][0] = machine.screen().ccc(255, 0, 0);
-    machine.palettes()[0][1] = machine.screen().ccc(255, 180, 0);
+    machine.spriteInfos()[0].x = 10;
+    machine.spriteInfos()[0].y = 10;
 
-    for (int y = 0; y < Specs::SPRITE_HEIGHT; ++y)
-      for (int x = 0; x < Specs::SPRITE_WIDTH; ++x)
-        machine.sprites()[0].set(x, y, rand() % 2);
+    machine.spriteInfos()[1].flags |= SpriteFlag::Enabled;
+    machine.spriteInfos()[1].x = 18;
+    machine.spriteInfos()[1].y = 10;
+    machine.spriteInfos()[1].index = 1;
+
+    machine.spriteInfos()[2].flags |= SpriteFlag::Enabled;
+    machine.spriteInfos()[2].x = 10;
+    machine.spriteInfos()[2].y = 18;
+    machine.spriteInfos()[2].index = 16;
+
+    machine.palettes()[0][1] = Color::ccc(200, 76, 12);
+    machine.palettes()[0][2] = Color::ccc(252, 188, 176);
+    machine.palettes()[0][3] = Color::ccc(0, 0, 0);
+
+    Sprite& sprite = machine.sprites()[0];
+    sprite.setRow(0, { 0, 0, 0, 0, 0, 0, 1, 1 });
+    sprite.setRow(1, { 0, 0, 0, 0, 0, 1, 1, 1 });
+    sprite.setRow(2, { 0, 0, 0, 0, 1, 1, 1, 1 });
+    sprite.setRow(3, { 0, 0, 0, 3, 3, 1, 1, 1 });
+    sprite.setRow(4, { 0, 0, 1, 1, 2, 3, 1, 1 });
+    sprite.setRow(5, { 0, 1, 1, 1, 2, 3, 1, 1 });
+    sprite.setRow(6, { 0, 1, 1, 1, 2, 3, 3, 3 });
+    sprite.setRowString(7, "11112321");
+
+    Sprite& sprite1 = machine.sprites()[1];
+    sprite1.setRowString(0, "11000000");
+    sprite1.setRowString(1, "11100000");
+    sprite1.setRowString(2, "11110000");
+    sprite1.setRowString(3, "11133000");
+    sprite1.setRowString(4, "11321100");
+    sprite1.setRowString(5, "11321110");
+    sprite1.setRowString(6, "33321110");
+    sprite1.setRowString(7, "12321111");
+
+    Sprite& sprite2 = machine.sprites()[16];
+    sprite2.setString("11112221" "11111111" "01111222" "00002222" "00002222" "00033222" "00033322" "00003330");
   }
 
-  screen.clear();
+  screen.fill(Color::ccc(27, 89, 156));
 
   /* for each sprite */
   for (s32 i = 0; i < Specs::SPRITE_INFO_SIZE; ++i)
@@ -89,7 +122,10 @@ void MainView::render()
           col_idx_t c = sprite.get(x, y);
           //TODO: range check?
 
-          screen.set(fx, fy, palette[c]);
+          col_t color = palette[c];
+
+          if (Color::isOpaque(color))
+            screen.set(fx, fy, color);
         }
     }
   }
