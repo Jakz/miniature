@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <string>
+#include <array>
 
 #define LOGD(x, ...) printf(x "\n", __VA_ARGS__)
 #define LOGDD(x) printf(x "\n")
@@ -10,6 +11,7 @@ using u8 = uint8_t;
 using u16 = uint16_t;
 using u32 = uint32_t;
 using u64 = uint64_t;
+using s16 = int16_t;
 using s32 = int32_t;
 
 template<typename T>

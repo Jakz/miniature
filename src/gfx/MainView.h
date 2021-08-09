@@ -14,8 +14,7 @@ namespace ui
     ViewManager* gvm;
     point_t mouse;
 
-    Memory memory;
-    Display display;
+    Machine machine;
     
     void blitFramebuffer();
 

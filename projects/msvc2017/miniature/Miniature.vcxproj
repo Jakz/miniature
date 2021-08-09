@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\Common.h" />
+    <ClInclude Include="..\..\..\src\FlagSet.h" />
     <ClInclude Include="..\..\..\src\gfx\MainView.h" />
     <ClInclude Include="..\..\..\src\gfx\SdlHelper.h" />
     <ClInclude Include="..\..\..\src\gfx\ViewManager.h" />

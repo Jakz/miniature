@@ -2,25 +2,122 @@
 
 #include "Common.h"
 
-static constexpr u32 KB64 = 2 << 16;
-static constexpr u32 KB128 = 2 << 17;
-static constexpr u32 KB256 = 2 << 18;
+#include "FlagSet.h"
 
-static constexpr u32 RED_SHIFT = 10, GREEN_SHIFT = 5, BLUE_SHIFT = 0;
-static constexpr u32 COLOR_MASK = 0b11111, COLOR_SHIFT = 3;
+static constexpr s32 KB1 = 1024;
+static constexpr s32 KB64 = 1 << 16;
+static constexpr s32 KB128 = 1 << 17;
+static constexpr s32 KB256 = 1 << 18;
 
 using addr_t = u32;
 using col_t = u16;
+using col_idx_t = u32;
+
+enum SpriteFlag : u32
+{
+  Enabled = 0x00000001,
+};
+
+struct SpriteInfo
+{
+  flag_set<SpriteFlag> flags;
+  s16 x, y;
+  u8 index;
+  u8 palette; // : 4
+};
+
+struct Specs
+{
+  static constexpr addr_t MEMORY_SIZE = KB128;
+  static constexpr s32 SCREEN_WIDTH = 128;
+  static constexpr s32 SCREEN_HEIGHT = 128;
+
+  static constexpr s32 BITS_PER_COLOR_COMPONENT = 5;
+  
+  static constexpr s32 PALETTE_SIZE = 16;
+  static constexpr s32 PALETTE_COUNT = 16;
+
+  static constexpr s32 SPRITE_WIDTH = 8;
+  static constexpr s32 SPRITE_HEIGHT = 8;
+  static constexpr s32 SPRITE_MAP_SIZE = 256;
+  static constexpr s32 SPRITE_MAPS_COUNT = 2;
+
+  static constexpr s32 SPRITE_INFO_SIZE = 128;
+  static constexpr s32 SPRITE_INFO_SIZE_IN_BYTES = sizeof(SpriteInfo);
+  static constexpr s32 SPRITE_INFOS_SIZE_IN_BYTES = SPRITE_INFO_SIZE * SPRITE_INFO_SIZE_IN_BYTES;
+
+  static constexpr s32 BITS_PER_SPRITE_COLOR = 4;
+  static constexpr s32 BITS_PER_SPRITE_PALETTE = 4;
+
+  static constexpr s32 FRAMEBUFFER_SIZE_IN_BYTES = SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(col_t);
+  static constexpr s32 PALETTES_SIZE_IN_BYTES = PALETTE_SIZE * PALETTE_COUNT * sizeof(col_t);
+  static constexpr s32 SPRITE_ROW_SIZE_IN_BYTES = SPRITE_WIDTH * (BITS_PER_SPRITE_COLOR / 8.0f);
+  static constexpr s32 SPRITE_SIZE_IN_BYTES = SPRITE_HEIGHT * SPRITE_ROW_SIZE_IN_BYTES;
+  static constexpr s32 SPRITE_MAP_SIZE_IN_BYTES = SPRITE_SIZE_IN_BYTES * SPRITE_MAP_SIZE;
+
+  static constexpr s32 RED_SHIFT = BITS_PER_COLOR_COMPONENT * 2;
+  static constexpr s32 GREEN_SHIFT = BITS_PER_COLOR_COMPONENT * 1;
+  static constexpr s32 BLUE_SHIFT = 0;
+
+  static constexpr s32 COLOR_MASK = (1 << BITS_PER_COLOR_COMPONENT) - 1;
+  static constexpr s32 COLOR_SHIFT = 8 - BITS_PER_COLOR_COMPONENT;
+  
+  static_assert(BITS_PER_COLOR_COMPONENT * 3 <= sizeof(col_t) * 8);
+};
 
 struct Address
 {
-  static constexpr addr_t VRAM = 0;
+  static constexpr addr_t VRAM = Specs::MEMORY_SIZE - Specs::FRAMEBUFFER_SIZE_IN_BYTES;
+  static constexpr addr_t PALETTES = VRAM - Specs::PALETTES_SIZE_IN_BYTES;
+  static constexpr addr_t SPRITE_MAP = PALETTES - Specs::SPRITE_MAP_SIZE_IN_BYTES;
+  static constexpr addr_t SPRITE_INFOS = SPRITE_MAP - Specs::SPRITE_INFOS_SIZE_IN_BYTES;
 };
+
+struct Color
+{
+  static constexpr col_t BLACK = 0x0000;
+  static constexpr col_t WHITE = 0xFFFF;
+};
+
+
+
+struct Sprite
+{
+private:
+  std::array<u8, Specs::SPRITE_SIZE_IN_BYTES> data;
+
+public:
+
+  void set(coord_t x, coord_t y, col_idx_t color)
+  {
+    u8* base = data.data() + (y * Specs::SPRITE_ROW_SIZE_IN_BYTES + (x / 2));
+
+    if (x % 2 == 0)
+      *base = (*base & 0x0F) | (color << 4);
+    else
+      *base = (*base & 0xF0) | (color);
+  }
+
+  col_idx_t get(coord_t x, coord_t y)
+  {
+    u8* base = data.data() + (y * Specs::SPRITE_ROW_SIZE_IN_BYTES + (x / 2));
+
+    if (x % 2 == 0)
+      return (*base >> 4) & 0x0F;
+    else
+      return *base & 0x0F;
+  }
+};
+
+using Palette = std::array<col_t, Specs::PALETTE_SIZE>;
+using Palettes = std::array<Palette, Specs::PALETTE_COUNT>;
+using SpriteMap = std::array<Sprite, Specs::SPRITE_MAP_SIZE>;
+using SpriteInfos = std::array<SpriteInfo, Specs::SPRITE_INFO_SIZE>;
 
 class Memory
 {
 public:
-  constexpr addr_t size() const { return KB128; }
+  constexpr addr_t size() const { return Specs::MEMORY_SIZE; }
 
 private:
   u8* memory;
@@ -55,7 +152,9 @@ public:
   const u32& dword(addr_t addr) const { return reinterpret_cast<const u32&>(memory[addr]); }
 };
 
-class Display
+using coord_t = s32;
+
+class Screen
 {
 private:
   Memory* memory;
@@ -64,37 +163,58 @@ private:
   col_t* framebuffer() { return memory->addr<col_t>(Address::VRAM); }
 
 public:
-  Display(Memory* memory) : memory(memory)
+  Screen(Memory* memory) : memory(memory)
   {
-    static_assert((WIDTH * HEIGHT) % 2 == 0);
+    static_assert((Specs::SCREEN_WIDTH * Specs::SCREEN_HEIGHT) % 2 == 0);
   }
 
 public:
-  static constexpr s32 WIDTH = 128;
-  static constexpr s32 HEIGHT = 128;
-
-  auto width() const { return WIDTH; }
-  auto height() const { return HEIGHT; }
+  auto width() const { return Specs::SCREEN_WIDTH; }
+  auto height() const { return Specs::SCREEN_HEIGHT; }
 
   col_t pixel(addr_t i) const { return framebuffer()[i]; }
 
-  constexpr u16 ccc(u8 r, u8 g, u8 b)
+  constexpr u16 ccc(u8 r, u8 g, u8 b) const 
   {
+    //TODO: not using full brightness colors
     return
-      ((r >> (COLOR_SHIFT)) << RED_SHIFT) |
-      ((g >> (COLOR_SHIFT)) << GREEN_SHIFT) |
-      ((b >> (COLOR_SHIFT)) << BLUE_SHIFT);
+      ((r >> (Specs::COLOR_SHIFT)) << Specs::RED_SHIFT) |
+      ((g >> (Specs::COLOR_SHIFT)) << Specs::GREEN_SHIFT) |
+      ((b >> (Specs::COLOR_SHIFT)) << Specs::BLUE_SHIFT);
   }
 
-  color_t ccc(u16 c)
+  color_t ccc(u16 c) const
   {
-    u8 r = ((c >> RED_SHIFT) & COLOR_MASK) << COLOR_SHIFT;
-    u8 g = ((c >> GREEN_SHIFT) & COLOR_MASK) << COLOR_SHIFT;
-    u8 b = ((c >> BLUE_SHIFT) & COLOR_MASK) << COLOR_SHIFT;
+    u8 r = ((c >> Specs::RED_SHIFT) & Specs::COLOR_MASK) << Specs::COLOR_SHIFT;
+    u8 g = ((c >> Specs::GREEN_SHIFT) & Specs::COLOR_MASK) << Specs::COLOR_SHIFT;
+    u8 b = ((c >> Specs::BLUE_SHIFT) & Specs::COLOR_MASK) << Specs::COLOR_SHIFT;
     return { r, g, b };
   }
 
+  void clear();
   void fill(col_t color);
-  void set(u32 x, u32 y, col_t color);
-  void rect(u32 x, u32 y, u32 w, u32 h, col_t color);
+  
+  void set(coord_t x, coord_t y, col_t color);
+
+  void rect(coord_t x, coord_t y, coord_t w, coord_t h, col_t color);
+  void line(coord_t x0, coord_t y0, coord_t x1, coord_t y1, col_t color);
+};
+
+
+class Machine
+{
+private:
+  Memory _memory;
+  Screen _screen;
+
+public:
+  Machine();
+
+  Memory& memory() { return _memory; }
+  Screen& screen() { return _screen; }
+  Palettes& palettes() { return *_memory.addr<Palettes>(Address::PALETTES); }
+  SpriteMap& sprites() { return *_memory.addr<SpriteMap>(Address::SPRITE_MAP); }
+  SpriteInfos& spriteInfos() { return *_memory.addr<SpriteInfos>(Address::SPRITE_INFOS); }
+
+  void reset();
 };
