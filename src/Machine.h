@@ -16,10 +16,12 @@ using col_idx_pair_t = u32;
 
 enum class SpriteFlag : u32
 {
-  Enabled = 0x00000001,
+  Enabled  = 0x00000001,
+  FlippedX = 0x00000002,
+  FlippedY = 0x00000004,
 };
 
-enum class SpriteSize { _8, _16, _24, _32, _48, _64 };
+enum class SpriteSize { _8 = 1, _16, _24, _32, _48, _64 };
 
 struct SpriteInfo
 {
@@ -27,6 +29,12 @@ struct SpriteInfo
   s16 x, y;
   u8 index;
   u8 palette; // : 4
+
+  SpriteSize width;
+  SpriteSize height;
+
+  coord_t pixelWidth() const;
+  coord_t pixelHeight() const;
 };
 
 struct Specs
@@ -206,19 +214,19 @@ public:
 
 using coord_t = s32;
 
+class Machine;
+
 class Screen
 {
 private:
+  Machine* machine;
   Memory* memory;
 
   const col_t* framebuffer() const { return memory->addr<col_t>(Address::VRAM); }
   col_t* framebuffer() { return memory->addr<col_t>(Address::VRAM); }
 
 public:
-  Screen(Memory* memory) : memory(memory)
-  {
-    static_assert((Specs::SCREEN_WIDTH * Specs::SCREEN_HEIGHT) % 2 == 0);
-  }
+  Screen(Machine* machine);
 
 public:
   auto width() const { return Specs::SCREEN_WIDTH; }
@@ -233,6 +241,8 @@ public:
 
   void rect(coord_t x, coord_t y, coord_t w, coord_t h, col_t color);
   void line(coord_t x0, coord_t y0, coord_t x1, coord_t y1, col_t color);
+
+  void rasterizeSprites();
 };
 
 

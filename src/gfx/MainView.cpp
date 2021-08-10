@@ -59,19 +59,13 @@ void MainView::render()
   {
     surface = gvm->allocate(screen.width(), screen.height());
 
-    machine.spriteInfos()[0].flags |= SpriteFlag::Enabled;
-    machine.spriteInfos()[0].x = 10;
-    machine.spriteInfos()[0].y = 10;
-
-    machine.spriteInfos()[1].flags |= SpriteFlag::Enabled;
-    machine.spriteInfos()[1].x = 18;
-    machine.spriteInfos()[1].y = 10;
-    machine.spriteInfos()[1].index = 1;
-
-    machine.spriteInfos()[2].flags |= SpriteFlag::Enabled;
-    machine.spriteInfos()[2].x = 10;
-    machine.spriteInfos()[2].y = 18;
-    machine.spriteInfos()[2].index = 16;
+    auto& info = machine.spriteInfos()[0];
+    info.flags |= SpriteFlag::Enabled;
+    info.flags |= SpriteFlag::FlippedY;
+    info.x = 10;
+    info.y = 10;
+    info.width = SpriteSize::_16;
+    info.height = SpriteSize::_16;
 
     machine.palettes()[0][1] = Color::ccc(200, 76, 12);
     machine.palettes()[0][2] = Color::ccc(252, 188, 176);
@@ -99,37 +93,23 @@ void MainView::render()
 
     Sprite& sprite2 = machine.sprites()[16];
     sprite2.setString("11112221" "11111111" "01111222" "00002222" "00002222" "00033222" "00033322" "00003330");
+
+    Sprite& sprite3 = machine.sprites()[17];
+    sprite3.setString("12221111" "11111111" "22211110" "22220000" "22223300" "22333330" "23333330" "03333300" );
   }
 
   screen.fill(Color::ccc(27, 89, 156));
+  screen.rasterizeSprites();
 
-  /* for each sprite */
-  for (s32 i = 0; i < Specs::SPRITE_INFO_SIZE; ++i)
+  static u64 counter = 0;
+
+  ++counter;
+
+  if (counter % 4 == 0)
   {
-    SpriteInfo& info = machine.spriteInfos()[i];
-    
-    /* if sprite should be drawn */
-    if (info.flags && SpriteFlag::Enabled)
-    {
-      Palette& palette = machine.palettes()[info.palette];
-      Sprite sprite = machine.sprites()[info.index];
-
-      /* draw it on framebuffer */
-      for (int y = 0; y < Specs::SPRITE_HEIGHT; ++y)
-        for (int x = 0; x < Specs::SPRITE_WIDTH; ++x)
-        {
-          auto fx = info.x + x, fy = info.y + y;
-          col_idx_t c = sprite.get(x, y);
-          //TODO: range check?
-
-          col_t color = palette[c];
-
-          if (Color::isOpaque(color))
-            screen.set(fx, fy, color);
-        }
-    }
+    machine.spriteInfos()[0].flags.flip(SpriteFlag::FlippedY);
+    ++machine.spriteInfos()[0].x;
   }
-
 
   /*screen.rect(10, 10, 16, 16, rand() % 0xFFFF);
   screen.line(1, 1, 30, 30, screen.ccc(255, 0, 0));
