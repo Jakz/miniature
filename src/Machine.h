@@ -37,6 +37,11 @@ struct SpriteInfo
   coord_t pixelHeight() const;
 };
 
+struct TileMapInfo
+{
+  s16 x, y;
+};
+
 struct Specs
 {
   static constexpr addr_t MEMORY_SIZE = KB128;
@@ -53,6 +58,11 @@ struct Specs
   static constexpr s32 SPRITE_MAP_WIDTH = 16;
   static constexpr s32 SPRITE_MAP_SIZE = 256;
   static constexpr s32 SPRITE_MAPS_COUNT = 2;
+
+  static constexpr s32 TILE_MAP_WIDTH = 32;
+  static constexpr s32 TILE_MAP_HEIGHT = 32;
+  static constexpr s32 TILE_MAPS_COUNT = 2;
+  static constexpr s32 TILE_MAP_SIZE_IN_BYTES = TILE_MAP_WIDTH * TILE_MAP_HEIGHT;
 
   static constexpr s32 SPRITE_INFO_SIZE = 128;
   static constexpr s32 SPRITE_INFO_SIZE_IN_BYTES = sizeof(SpriteInfo);
@@ -81,8 +91,10 @@ struct Address
 {
   static constexpr addr_t VRAM = Specs::MEMORY_SIZE - Specs::FRAMEBUFFER_SIZE_IN_BYTES;
   static constexpr addr_t PALETTES = VRAM - Specs::PALETTES_SIZE_IN_BYTES;
-  static constexpr addr_t SPRITE_MAP = PALETTES - Specs::SPRITE_MAP_SIZE_IN_BYTES;
-  static constexpr addr_t SPRITE_INFOS = SPRITE_MAP - Specs::SPRITE_INFOS_SIZE_IN_BYTES;
+  static constexpr addr_t SPRITE_INFOS = PALETTES - Specs::SPRITE_INFOS_SIZE_IN_BYTES;
+  static constexpr addr_t SPRITE_MAP = SPRITE_INFOS - Specs::SPRITE_MAP_SIZE_IN_BYTES * Specs::SPRITE_MAPS_COUNT;
+  static constexpr addr_t TILE_MAP = SPRITE_MAP - Specs::TILE_MAP_SIZE_IN_BYTES * Specs::TILE_MAPS_COUNT;
+
 };
 
 struct Color

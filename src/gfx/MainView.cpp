@@ -3,6 +3,9 @@
 #include "MainView.h"
 #include "ViewManager.h"
 
+#include <vector>
+#include <algorithm>
+
 using namespace ui;
 
 u32* buffer = nullptr;
@@ -25,7 +28,7 @@ void MainView::blitFramebuffer()
 
 std::string readableBytes(u64 amount)
 {
-  if (amount < KB1) return std::to_string(amount) + " bytes";
+  if (true || amount < KB1) return std::to_string(amount) + " bytes";
   else return std::to_string(amount / KB1) + " Kb";
 }
 
@@ -34,6 +37,8 @@ MainView::MainView(ViewManager* gvm) : gvm(gvm)
   mouse = { -1, -1 };
 
   machine.reset();
+  machine.screen().fill(Color::ccc(27, 89, 156));
+
 
   printf("Total memory: %s\n", readableBytes(Specs::MEMORY_SIZE).c_str());
   printf("Framebuffer size: %s\n", readableBytes(Specs::FRAMEBUFFER_SIZE_IN_BYTES).c_str());
@@ -42,8 +47,19 @@ MainView::MainView(ViewManager* gvm) : gvm(gvm)
   printf("Sprite map size: %s\n", readableBytes(Specs::SPRITE_MAP_SIZE_IN_BYTES).c_str());
   printf("Sprite info size: %s\n", readableBytes(Specs::SPRITE_INFO_SIZE_IN_BYTES).c_str());
   printf("Sprite infos size: %s\n", readableBytes(Specs::SPRITE_INFOS_SIZE_IN_BYTES).c_str());
+  printf("Tilemap size: %s\n", readableBytes(Specs::TILE_MAP_SIZE_IN_BYTES).c_str());
 
   printf("\nMapped memory: %s\n", readableBytes(Specs::FRAMEBUFFER_SIZE_IN_BYTES + Specs::PALETTES_SIZE_IN_BYTES + Specs::SPRITE_MAP_SIZE_IN_BYTES + Specs::SPRITE_INFOS_SIZE_IN_BYTES).c_str());
+
+  std::vector<std::pair<std::string, addr_t>> addresses;
+  addresses.emplace_back(std::make_pair("tile-map", Address::TILE_MAP));
+  addresses.emplace_back(std::make_pair("palettes", Address::PALETTES));
+  addresses.emplace_back(std::make_pair("sprite-infos", Address::SPRITE_INFOS));
+  addresses.emplace_back(std::make_pair("sprite-map", Address::SPRITE_MAP));
+  addresses.emplace_back(std::make_pair("framebuffer", Address::VRAM));
+  std::sort(addresses.begin(), addresses.end(), [](const auto& p1, const auto& p2) { return p1.first > p2.first; });
+  for (const auto& entry : addresses)
+    printf("Address %08x: %s\n", entry.second, entry.first.c_str());
 
 }
 
@@ -98,7 +114,6 @@ void MainView::render()
     sprite3.setString("12221111" "11111111" "22211110" "22220000" "22223300" "22333330" "23333330" "03333300" );
   }
 
-  screen.fill(Color::ccc(27, 89, 156));
   screen.rasterizeSprites();
 
   static u64 counter = 0;
@@ -109,6 +124,20 @@ void MainView::render()
   {
     machine.spriteInfos()[0].flags.flip(SpriteFlag::FlippedY);
     ++machine.spriteInfos()[0].x;
+
+  }
+
+  if (counter % 16 == 0)
+  {
+    col_t* buffer = machine.memory().addr<col_t>(Address::VRAM);
+
+    for (int i = 0; i < Specs::SCREEN_WIDTH * Specs::SCREEN_HEIGHT; ++i)
+    {
+      color_t c = Color::ccc(buffer[i]);
+      color_t d = { 27, 89, 156 };
+
+      buffer[i] = Color::ccc((c.r + d.r) / 2, (c.g + d.g) / 2, (c.b + d.b) / 2);
+    }
   }
 
   /*screen.rect(10, 10, 16, 16, rand() % 0xFFFF);
