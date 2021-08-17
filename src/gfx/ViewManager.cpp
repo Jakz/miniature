@@ -19,13 +19,13 @@ void ui::ViewManager::deinit()
 
 bool ui::ViewManager::loadData()
 {
-  SDL_Surface* font = IMG_Load("font.png");
+  /*SDL_Surface* font = IMG_Load("font.png");
   assert(font);
 
   _font = SDL_CreateTextureFromSurface(_renderer, font);
 
   SDL_SetTextureBlendMode(_font, SDL_BLENDMODE_BLEND);
-  SDL_FreeSurface(font);
+  SDL_FreeSurface(font);*/
 
   return true;
 }
@@ -54,7 +54,7 @@ void ui::ViewManager::text(const std::string& text, int32_t x, int32_t y)
   for (size_t i = 0; i < text.length(); ++i)
   {
     SDL_Rect src = { 6 * (text[i] % GLYPHS_PER_ROW), 9 * (text[i] / GLYPHS_PER_ROW), 5, 8 };
-    SDL_Rect dest = { x + 6 * i * scale, y, 5 * scale, 8 * scale };
+    SDL_Rect dest = SDL_MakeRect(x + 6 * i * scale, y, 5 * scale, 8 * scale);
     SDL_RenderCopy(_renderer, _font, &src, &dest);
   }
 }
@@ -75,7 +75,7 @@ void ViewManager::text(const std::string& text, int32_t x, int32_t y, SDL_Color 
   for (size_t i = 0; i < text.length(); ++i)
   {
     SDL_Rect src = { 6 * (text[i] % GLYPHS_PER_ROW), 9 * (text[i] / GLYPHS_PER_ROW), 5, 8 };
-    SDL_Rect dest = { x + 6 * i * scale, y, 5 * scale, 8 * scale };
+    SDL_Rect dest = SDL_MakeRect(x + 6 * i * scale, y, 5 * scale, 8 * scale);
     SDL_RenderCopy(_renderer, _font, &src, &dest);
   }
 

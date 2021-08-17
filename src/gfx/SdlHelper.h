@@ -210,7 +210,7 @@ bool SDL<EventHandler, Renderer>::init()
 {
   if (SDL_Init(SDL_INIT_EVERYTHING))
   {
-    LOGD("Error on SDL_Init().\n");
+    LOGDD("Error on SDL_Init().\n");
     return false;
   }
 
@@ -218,7 +218,7 @@ bool SDL<EventHandler, Renderer>::init()
 #if defined(WINDOW_SCALE)
   _window = SDL_CreateWindow("miniature", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH * 2, HEIGHT * 2, SDL_WINDOW_OPENGL);
 #else
-  _window = SDL_CreateWindow("miniature", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, SDL_WINDOW_OPENGL);
+  _window = SDL_CreateWindow("miniature", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI);
 #endif
   _renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
